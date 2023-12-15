@@ -93,6 +93,9 @@ class AnomalyModule(pl.LightningModule, ABC):
             outputs["pred_labels"] = outputs["pred_scores"] >= self.image_threshold.value
             if "anomaly_maps" in outputs.keys():
                 outputs["pred_masks"] = outputs["anomaly_maps"] >= self.pixel_threshold.value
+                if "map_st" in outputs.keys():
+                    outputs["pred_masks_st"] = outputs["map_st"] >= self.pixel_threshold.value
+                    outputs["pred_masks_ae"] = outputs["map_ae"] >= self.pixel_threshold.value
                 if "pred_boxes" not in outputs.keys():
                     outputs["pred_boxes"], outputs["box_scores"] = masks_to_boxes(
                         outputs["pred_masks"], outputs["anomaly_maps"]

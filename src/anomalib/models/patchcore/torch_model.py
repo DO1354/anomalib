@@ -125,7 +125,7 @@ class PatchcoreModel(DynamicBufferModule, nn.Module):
         embedding = embedding.permute(0, 2, 3, 1).reshape(-1, embedding_size)
         return embedding
 
-    def subsample_embedding(self, embedding: Tensor, sampling_ratio: float) -> None:
+    def subsample_embedding(self, embedding: Tensor, sampling_ratio: float, coreset_size: int) -> None:
         """Subsample embedding based on coreset sampling and store to memory.
 
         Args:
@@ -134,7 +134,7 @@ class PatchcoreModel(DynamicBufferModule, nn.Module):
         """
 
         # Coreset Subsampling
-        sampler = KCenterGreedy(embedding=embedding, sampling_ratio=sampling_ratio)
+        sampler = KCenterGreedy(embedding=embedding, sampling_ratio=sampling_ratio, coreset_size=coreset_size)
         coreset = sampler.sample_coreset()
         self.memory_bank = coreset
 

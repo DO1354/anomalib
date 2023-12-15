@@ -33,6 +33,8 @@ class ImageResult:
     image: np.ndarray
     pred_score: float
     pred_label: str
+    map_st: np.ndarray | None = None
+    map_ae: np.ndarray | None = None
     anomaly_map: np.ndarray | None = None
     gt_mask: np.ndarray | None = None
     pred_mask: np.ndarray | None = None
@@ -48,7 +50,10 @@ class ImageResult:
     def __post_init__(self) -> None:
         """Generate heatmap overlay and segmentations, convert masks to images."""
         if self.anomaly_map is not None:
-            self.heat_map = superimpose_anomaly_map(self.anomaly_map, self.image, normalize=False)
+            self.heat_map = superimpose_anomaly_map(self.anomaly_map, self.image, normalize=True)
+        if self.map_ae is not None:
+            self.heat_map_ae = superimpose_anomaly_map(self.map_ae, self.image, normalize=True)
+            self.heat_map_st = superimpose_anomaly_map(self.map_st, self.image, normalize=True)
         if self.pred_mask is not None and self.pred_mask.max() <= 1.0:
             self.pred_mask *= 255
             self.segmentations = mark_boundaries(self.image, self.pred_mask, color=(1, 0, 0), mode="thick")
@@ -112,6 +117,8 @@ class Visualizer:
                 image=image,
                 pred_score=batch["pred_scores"][i].cpu().numpy().item(),
                 pred_label=batch["pred_labels"][i].cpu().numpy().item(),
+                map_st=batch["map_st"][i].cpu().numpy() if "map_st" in batch else None,
+                map_ae=batch["map_ae"][i].cpu().numpy() if "map_ae" in batch else None,
                 anomaly_map=batch["anomaly_maps"][i].cpu().numpy() if "anomaly_maps" in batch else None,
                 pred_mask=batch["pred_masks"][i].squeeze().int().cpu().numpy() if "pred_masks" in batch else None,
                 gt_mask=batch["mask"][i].squeeze().int().cpu().numpy() if "mask" in batch else None,
@@ -166,6 +173,9 @@ class Visualizer:
             visualization.add_image(image_result.image, "Image")
             if image_result.gt_mask is not None:
                 visualization.add_image(image=image_result.gt_mask, color_map="gray", title="Ground Truth")
+            if image_result.map_st is not None:
+                visualization.add_image(image_result.heat_map_st, "Predicted Heat Map ST")
+                visualization.add_image(image_result.heat_map_ae, "Predicted Heat Map AE")
             visualization.add_image(image_result.heat_map, "Predicted Heat Map")
             visualization.add_image(image=image_result.pred_mask, color_map="gray", title="Predicted Mask")
             visualization.add_image(image=image_result.segmentations, title="Segmentation Result")

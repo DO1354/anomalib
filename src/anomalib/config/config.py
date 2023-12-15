@@ -204,6 +204,8 @@ def update_datasets_config(config: DictConfig | ListConfig) -> DictConfig | List
 def get_configurable_parameters(
     model_name: str | None = None,
     config_path: Path | str | None = None,
+    category: str | None = None,
+    format: str | None = None,
     weight_file: str | None = None,
     config_filename: str | None = "config",
     config_file_extension: str | None = "yaml",
@@ -237,6 +239,12 @@ def get_configurable_parameters(
 
     # keep track of the original config file because it will be modified
     config_original: DictConfig = config.copy()
+    config.dataset.category = category
+    if format != None:
+        config.dataset.name = format
+        # config.dataset.format = format
+        config.dataset.path = config.dataset.path.replace('MVTec', 'Matrox')
+
 
     # if the seed value is 0, notify a user that the behavior of the seed value zero has been changed.
     if config.project.get("seed") == 0:

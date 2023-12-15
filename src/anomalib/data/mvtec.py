@@ -48,7 +48,7 @@ from anomalib.data.utils import (
 logger = logging.getLogger(__name__)
 
 
-IMG_EXTENSIONS = (".png", ".PNG")
+IMG_EXTENSIONS = (".png", ".PNG", ".bmp", ".tif", ".jpeg")
 
 DOWNLOAD_INFO = DownloadInfo(
     name="mvtec",
@@ -77,7 +77,7 @@ CATEGORIES = (
 
 
 def make_mvtec_dataset(
-    root: str | Path, split: str | Split | None = None, extensions: Sequence[str] | None = None
+    root: str | Path, split: str | Split | None = None, extensions: Sequence[str] | None = None, image_type: str | None = None #'bmp' None
 ) -> DataFrame:
     """Create MVTec AD samples by parsing the MVTec AD data file structure.
 
@@ -134,23 +134,39 @@ def make_mvtec_dataset(
 
     samples = DataFrame(samples_list, columns=["path", "split", "label", "image_path"])
 
+    if image_type != None:
+        extension = f".{image_type}"
+        samples = samples[samples.split != "ground_truth"]
+        samples["mask_path"] = (
+                samples.path
+                + "/ground_truth/"
+                + samples.label
+                + "/"
+                + samples.image_path.str.rstrip(image_type).str.rstrip(".")
+                + extension
+        )
+
     # Modify image_path column by converting to absolute path
     samples["image_path"] = samples.path + "/" + samples.split + "/" + samples.label + "/" + samples.image_path
+
+    if image_type != None:
+        samples.loc[(samples.split == "test") & (samples.label == "good"), "mask_path"] = ""
 
     # Create label index for normal (0) and anomalous (1) images.
     samples.loc[(samples.label == "good"), "label_index"] = LabelName.NORMAL
     samples.loc[(samples.label != "good"), "label_index"] = LabelName.ABNORMAL
     samples.label_index = samples.label_index.astype(int)
 
-    # separate masks from samples
-    mask_samples = samples.loc[samples.split == "ground_truth"].sort_values(by="image_path", ignore_index=True)
-    samples = samples[samples.split != "ground_truth"].sort_values(by="image_path", ignore_index=True)
+    if image_type == None:
+        # separate masks from samples
+        mask_samples = samples.loc[samples.split == "ground_truth"].sort_values(by="image_path", ignore_index=True)
+        samples = samples[samples.split != "ground_truth"].sort_values(by="image_path", ignore_index=True)
 
-    # assign mask paths to anomalous test images
-    samples["mask_path"] = ""
-    samples.loc[
-        (samples.split == "test") & (samples.label_index == LabelName.ABNORMAL), "mask_path"
-    ] = mask_samples.image_path.values
+        # assign mask paths to anomalous test images
+        samples["mask_path"] = ""
+        samples.loc[
+            (samples.split == "test") & (samples.label_index == LabelName.ABNORMAL), "mask_path"
+        ] = mask_samples.image_path.values
 
     # assert that the right mask files are associated with the right test images
     if len(samples.loc[samples.label_index == LabelName.ABNORMAL]):

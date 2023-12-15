@@ -1,13 +1,13 @@
 dataset:
   name: mvtec
   format: mvtec
-  path: ./datasets/MVTec
+  path: /home/davidoso/Documents/Data/MVTec/
   category: bottle
   task: segmentation
   train_batch_size: 1
   eval_batch_size: 16
-  num_workers: 8
-  image_size: 256 # dimensions to which images are resized (mandatory)
+  num_workers: 0 #8
+  image_size: 256 #[512,512] # dimensions to which images are resized (mandatory)
   center_crop: null # dimensions to which images are center-cropped after resizing (optional)
   normalization: none # data distribution to which the images will be normalized: [none, imagenet]
   transform_config:
@@ -91,7 +91,7 @@ trainer:
   num_sanity_val_steps: 0
   profiler: null
   benchmark: false
-  deterministic: false
+  deterministic: true
   reload_dataloaders_every_n_epochs: 0
   auto_lr_find: false
   replace_sampler_ddp: true

@@ -32,9 +32,9 @@ class KCenterGreedy:
         torch.Size([219, 1536])
     """
 
-    def __init__(self, embedding: Tensor, sampling_ratio: float) -> None:
+    def __init__(self, embedding: Tensor, sampling_ratio: float, coreset_size: int) -> None:
         self.embedding = embedding
-        self.coreset_size = int(embedding.shape[0] * sampling_ratio)
+        self.coreset_size = coreset_size #int(embedding.shape[0] * sampling_ratio)
         self.model = SparseRandomProjection(eps=0.9)
 
         self.features: Tensor

@@ -97,6 +97,9 @@ class MinMaxNormalizationCallback(Callback):
         outputs["pred_scores"] = normalize(outputs["pred_scores"], image_threshold, stats.min, stats.max)
         if "anomaly_maps" in outputs:
             outputs["anomaly_maps"] = normalize(outputs["anomaly_maps"], pixel_threshold, stats.min, stats.max)
+        if "map_st" in outputs:
+            outputs["map_st"] = normalize(outputs["map_st"], pixel_threshold, stats.min, stats.max)
+            outputs["map_ae"] = normalize(outputs["map_ae"], pixel_threshold, stats.min, stats.max)
         if "box_scores" in outputs:
             outputs["box_scores"] = [
                 normalize(scores, pixel_threshold, stats.min, stats.max) for scores in outputs["box_scores"]

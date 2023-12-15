@@ -10,6 +10,7 @@ results.
 
 import logging
 import warnings
+import time
 from argparse import ArgumentParser, Namespace
 
 from pytorch_lightning import Trainer, seed_everything
@@ -34,6 +35,8 @@ def get_parser() -> ArgumentParser:
     parser.add_argument("--model", type=str, default="padim", help="Name of the algorithm to train/test")
     parser.add_argument("--config", type=str, required=False, help="Path to a model config file")
     parser.add_argument("--log-level", type=str, default="INFO", help="<DEBUG, INFO, WARNING, ERROR>")
+    parser.add_argument("--category", type=str, default="bottle", help="Name of the category")
+    parser.add_argument("--format", type=str, default=None, help="Name of the format")
 
     return parser
 
@@ -50,7 +53,7 @@ def train(args: Namespace):
     if args.log_level == "ERROR":
         warnings.filterwarnings("ignore")
 
-    config = get_configurable_parameters(model_name=args.model, config_path=args.config)
+    config = get_configurable_parameters(model_name=args.model, config_path=args.config, category=args.category, format=args.format)
     if config.project.get("seed") is not None:
         seed_everything(config.project.seed)
 
@@ -61,7 +64,9 @@ def train(args: Namespace):
 
     trainer = Trainer(**config.trainer, logger=experiment_logger, callbacks=callbacks)
     logger.info("Training the model.")
+    start = time.time()
     trainer.fit(model=model, datamodule=datamodule)
+    end = time.time()
 
     logger.info("Loading the best model weights.")
     load_model_callback = LoadModelCallback(weights_path=trainer.checkpoint_callback.best_model_path)
@@ -71,7 +76,11 @@ def train(args: Namespace):
         logger.info("No test set provided. Skipping test stage.")
     else:
         logger.info("Testing the model.")
+        start_test = time.time()
         trainer.test(model=model, datamodule=datamodule)
+        end_test = time.time()
+
+    print('Training Time: ', abs(end-start), 'Test Time: ', abs(end_test-start_test))
 
 
 if __name__ == "__main__":

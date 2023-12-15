@@ -21,6 +21,8 @@ def get_parser() -> ArgumentParser:
     """
     parser = ArgumentParser()
     parser.add_argument("--model", type=str, default="stfpm", help="Name of the algorithm to train/test")
+    parser.add_argument("--category", type=str, default="bottle", help="Name of the category")
+    parser.add_argument("--format", type=str, default=None, help="Name of the format")
     parser.add_argument("--config", type=str, required=False, help="Path to a model config file")
     parser.add_argument("--weight_file", type=str, default="weights/model.ckpt")
 
@@ -37,6 +39,8 @@ def test(args: Namespace):
         model_name=args.model,
         config_path=args.config,
         weight_file=args.weight_file,
+        category=args.category,
+        format=args.format
     )
 
     if config.project.seed:

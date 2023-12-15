@@ -309,6 +309,7 @@ class EfficientAdModel(nn.Module):
             distance_st = reduce_tensor_elems(distance_st)
             d_hard = torch.quantile(distance_st, 0.999)
             loss_hard = torch.mean(distance_st[distance_st >= d_hard])
+            #loss_hard = torch.mean(distance_st)
             student_output_penalty = self.student(batch_imagenet)[:, : self.teacher_out_channels, :, :]
             loss_penalty = torch.mean(student_output_penalty**2)
             loss_st = loss_hard + loss_penalty
@@ -329,7 +330,7 @@ class EfficientAdModel(nn.Module):
 
             loss_ae = torch.mean(distance_ae)
             loss_stae = torch.mean(distance_stae)
-            return (loss_st, loss_ae, loss_stae)
+            return (loss_st, loss_ae, loss_stae, loss_hard, loss_penalty)
 
         else:
             with torch.no_grad():

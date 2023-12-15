@@ -41,6 +41,7 @@ class Patchcore(AnomalyModule):
         layers: list[str],
         pre_trained: bool = True,
         coreset_sampling_ratio: float = 0.1,
+        coreset_size: int = 4000,
         num_neighbors: int = 9,
     ) -> None:
         super().__init__()
@@ -54,6 +55,7 @@ class Patchcore(AnomalyModule):
         )
         self.coreset_sampling_ratio = coreset_sampling_ratio
         self.embeddings: list[Tensor] = []
+        self.coreset_size = coreset_size
 
     def configure_optimizers(self) -> None:
         """Configure optimizers.
@@ -92,7 +94,7 @@ class Patchcore(AnomalyModule):
         embeddings = torch.vstack(self.embeddings)
 
         logger.info("Applying core-set subsampling to get the embedding.")
-        self.model.subsample_embedding(embeddings, self.coreset_sampling_ratio)
+        self.model.subsample_embedding(embeddings, self.coreset_sampling_ratio, self.coreset_size)
 
     def validation_step(self, batch: dict[str, str | Tensor], *args, **kwargs) -> STEP_OUTPUT:
         """Get batch of anomaly maps from input image batch.

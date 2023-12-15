@@ -20,6 +20,7 @@ from pytorch_lightning.utilities.types import STEP_OUTPUT
 from torch import Tensor, optim
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
+import csv
 
 from anomalib.data.utils import DownloadInfo, download_and_extract
 from anomalib.models.components import AnomalyModule
@@ -93,6 +94,16 @@ class EfficientAd(AnomalyModule):
 
         self.prepare_pretrained_model()
         self.prepare_imagenette_data()
+
+        #self.loss = {}
+        #self.loss["train_st"]=[]
+        #self.loss["train_ae"] = []
+        #self.loss["train_stae"] = []
+        #self.loss["train_loss"] = []
+        with open('results/cable_nostae.csv', 'w', newline="") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["loss_hard", "loss_penalty", "train_st", "train_ae", "train_stae", "train_loss"])
+            csvfile.close()
 
     def prepare_pretrained_model(self) -> None:
         pretrained_models_dir = Path("./pre_trained/")
@@ -233,13 +244,21 @@ class EfficientAd(AnomalyModule):
             self.imagenet_iterator = iter(self.imagenet_loader)
             batch_imagenet = next(self.imagenet_iterator)[0]["image"].to(self.device)
 
-        loss_st, loss_ae, loss_stae = self.model(batch=batch["image"], batch_imagenet=batch_imagenet)
+        loss_st, loss_ae, loss_stae, loss_hard, loss_penalty = self.model(batch=batch["image"], batch_imagenet=batch_imagenet)
 
-        loss = loss_st + loss_ae + loss_stae
+        loss = loss_st + loss_ae #+ loss_stae
         self.log("train_st", loss_st.item(), on_epoch=True, prog_bar=True, logger=True)
         self.log("train_ae", loss_ae.item(), on_epoch=True, prog_bar=True, logger=True)
         self.log("train_stae", loss_stae.item(), on_epoch=True, prog_bar=True, logger=True)
         self.log("train_loss", loss.item(), on_epoch=True, prog_bar=True, logger=True)
+        #self.loss_st = loss_st.item()
+        #self.loss_ae = loss_ae.item()
+        #self.loss_stae = loss_stae.item()
+        #self.loss_train = loss.item()
+        with open('results/cable_nostae.csv', 'a', newline="") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow([loss_hard.item(), loss_penalty.item(), loss_st.item(), loss_ae.item(), loss_stae.item(), loss.item()])
+            csvfile.close()
         return {"loss": loss}
 
     def on_validation_start(self) -> None:
@@ -261,7 +280,15 @@ class EfficientAd(AnomalyModule):
         """
         del args, kwargs  # These variables are not used.
 
-        batch["anomaly_maps"] = self.model(batch["image"])["anomaly_map"]
+        output_efficientad = self.model(batch["image"])
+        batch["anomaly_maps"] = output_efficientad["anomaly_map"]
+        batch["map_st"] = output_efficientad["map_st"]
+        batch["map_ae"] = output_efficientad["map_ae"]
+
+        #self.loss["train_st"].append(self.loss_st)
+        #self.loss["train_ae"].append(self.loss_ae)
+        #self.loss["train_stae"].append(self.loss_stae)
+        #self.loss["train_loss"].append(self.loss_train)
 
         return batch
 
