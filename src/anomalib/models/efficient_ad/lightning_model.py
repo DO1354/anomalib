@@ -100,7 +100,7 @@ class EfficientAd(AnomalyModule):
         #self.loss["train_ae"] = []
         #self.loss["train_stae"] = []
         #self.loss["train_loss"] = []
-        with open('results/cable_nostae.csv', 'w', newline="") as csvfile:
+        with open('results/cable_noquantile.csv', 'w', newline="") as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(["loss_hard", "loss_penalty", "train_st", "train_ae", "train_stae", "train_loss"])
             csvfile.close()
@@ -255,7 +255,7 @@ class EfficientAd(AnomalyModule):
         #self.loss_ae = loss_ae.item()
         #self.loss_stae = loss_stae.item()
         #self.loss_train = loss.item()
-        with open('results/cable_nostae.csv', 'a', newline="") as csvfile:
+        with open('results/cable_noquantile.csv', 'a', newline="") as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow([loss_hard.item(), loss_penalty.item(), loss_st.item(), loss_ae.item(), loss_stae.item(), loss.item()])
             csvfile.close()
